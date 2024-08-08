@@ -186,14 +186,14 @@ class GreenGoModule extends InstanceBase {
 				required: true,
 				default: 6, // Default value
 				min: 1,
-				max: 12, // Updated maximum value
+				max: 32, // Updated maximum value
 				regex: Regex.number,
-				tooltip: 'Define the amount of channels to control via this module (1 - 12)',
+				tooltip: 'Define the amount of channels to control via this module (1 - 32)',
 			},
 			{
 				type: 'static-text',
 				id: 'info',
-				width: 12,
+				width: 32,
 				label: 'Important Notice',
 				value:
 					'Before using the Green-GO module for Bitfocus Companion, make sure to compile and load the <a href="https://github.com/bitfocus/companion-module-greengo-intercom/blob/master/osc-remote.gg5t" alt="osc-remote Green-GO Script">osc-remote.gg5t</a> script file onto your Green-GO device.<br><br>This module will not function without that script running!',
