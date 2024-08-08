@@ -11,6 +11,7 @@ module.exports = function (module = {}) {
 				}
 			}
 		}
+
 		// Generate variables for channels
 		for (let i = 1; i <= module.config.channels; i++) {
 			const channelVariables = [
@@ -24,7 +25,8 @@ module.exports = function (module = {}) {
 			]
 			channelVariables.forEach(addVariable)
 		}
-		// Define user or device specific variables
+
+		// Define user or device-specific variables
 		const deviceVariables = [
 			{ variableId: 'state_audio_gain', name: 'Input Gain State' },
 			{ variableId: 'state_audio_source', name: 'Input Source' },
@@ -33,6 +35,7 @@ module.exports = function (module = {}) {
 			{ variableId: 'state_level_pgm', name: 'PGM Level' },
 			{ variableId: 'state_level_direct', name: 'Direct Channel Level' },
 			{ variableId: 'state_heartbeat', name: 'Device Online State' },
+			{ variableId: 'state_input_source', name: 'Input Source State' }, // Added for inputSource action
 		]
 		deviceVariables.forEach(addVariable)
 
@@ -58,6 +61,7 @@ module.exports = function (module = {}) {
 			]
 			wpxVariables.forEach(addVariable)
 		}
+
 		const variableDefinitions = Object.entries(companionVariables).map(([variableId, { name }]) => ({
 			variableId,
 			name,
@@ -81,5 +85,14 @@ module.exports = function (module = {}) {
 
 	return {
 		companionVariables,
+		setCompanionVariableValue: (variableId, value) => {
+			if (companionVariables[variableId]) {
+				companionVariables[variableId].value = value
+				module.setVariableValues({ [variableId]: value })
+				module.log('debug', `Variables: Updated ${variableId} to ${value}`)
+			} else {
+				module.log('error', `Variables: Attempted to set undefined variable ${variableId}`)
+			}
+		},
 	}
 }

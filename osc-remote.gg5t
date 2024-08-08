@@ -11,7 +11,7 @@ osc.destination(remoteIP,controlPort)
 
 // Event listener for remotely triggered state updates
 event osc.receive["/ggo/cmd/update"]
-    for chId = 1 to 6
+    for chId = 1 to 12
         osc.send("/ggo/state/channel/talk",channel.talk[chId],chId)
         osc.send("/ggo/state/channel/call",channel.call[chId],chId)
         osc.send("/ggo/state/channel/cue",channel.cue[chId],chId)
@@ -38,7 +38,7 @@ timer[1] = 3000
 
 // Event listeners for channel states & configurations
 // All channel related commands have a second argument defining the channel ID
-for chId = 1 to 6
+for chId = 1 to 12
     event channel.talk[chId]
         osc.send("/ggo/state/channel/talk",channel.talk[event.index],event.index)
     end
@@ -88,35 +88,35 @@ end
 // Event listeners for receiving commands via OSC messages
 // All channel related commands have a second argument defining the channel ID
 event osc.receive["/ggo/cmd/channel/talk"]
-    for chId = 1 to 6
+    for chId = 1 to 12
         if osc.read(2) == chId
             channel.talk[chId] = osc.read(1)
         end
     end
 end
 event osc.receive["/ggo/cmd/channel/call"]
-    for chId = 1 to 6
+    for chId = 1 to 12
         if osc.read(2) == chId
             channel.call[chId] = osc.read(1)
         end
     end
 end
 event osc.receive["/ggo/cmd/channel/cue"]
-    for chId = 1 to 6
+    for chId = 1 to 12
         if osc.read(2) == chId
             channel.cue[chId] = osc.read(1)
         end
     end
 end
 event osc.receive["/ggo/cmd/channel/listen"]
-    for chId = 1 to 6
+    for chId = 1 to 12
         if osc.read(2) == chId
             channel.listen[chId] = osc.read(1)
         end
     end
 end
 event osc.receive["/ggo/cmd/channel/level"]
-    for chId = 1 to 6
+    for chId = 1 to 12
         if osc.read(2) == chId
             channel.level[chId] = osc.read(1)
         end

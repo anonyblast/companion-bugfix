@@ -19,7 +19,6 @@ class OscModule extends EventEmitter {
 			this.module.log('warn', `OSC Manager: No variables defined`)
 		}
 		this.config = config
-		// Ensure config is initialized
 		if (!this.config) {
 			this.module.log('error', `OSC Manager: Config not initialized`)
 			return
@@ -28,7 +27,6 @@ class OscModule extends EventEmitter {
 			this.module.log('debug', 'OSC Manager: Running instance found, restarting the OSC listeners')
 			this.closeOSCListeners()
 		}
-		// Initialize OSC listener
 		this.oscPort = new osc.UDPPort({
 			localAddress: '0.0.0.0',
 			localPort: this.config.port,
@@ -36,31 +34,23 @@ class OscModule extends EventEmitter {
 			remotePort: this.config.port,
 			metadata: true,
 		})
-		// Add listeners for OSC messages and errors
 		this.oscPort.on('message', (oscMsg) => this.onMessage(oscMsg))
 		this.oscPort.on('error', (error) => this.onError(error))
-		// Open the OSC port
 		this.oscPort.open()
 		this.module.updateStatus(InstanceStatus.Ok)
 	}
 
-	// Handle all incoming OSC messages
 	onMessage(oscMsg) {
-		// Check if the message is a heartbeat
 		if (oscMsg.address === '/ggo/state/heartbeat') {
-			// If stateUpdateTimer is running, we should initialize another state update request
 			if (this.stateUpdateTimer) {
 				this.requestStateUpdate()
 			}
-			// Clear the existing heartbeat timer if it exists
 			if (this.heartbeatTimer) {
 				clearTimeout(this.heartbeatTimer)
 			}
-			// Start a new heartbeat timer and exit function
 			this.heartbeatTimer = setTimeout(() => this.handleHeartbeat(), 5000)
 		}
 		if (oscMsg.address === '/ggo/state/updated') {
-			// Clear the timer for requestStateUpdate() as we've received confirmation that updates have been sent
 			if (this.stateUpdateTimer) {
 				clearInterval(this.stateUpdateTimer)
 				this.stateUpdateTimer = null
@@ -68,12 +58,9 @@ class OscModule extends EventEmitter {
 			this.module.log('info', `OSC Manager: Received complete state update from ${this.config.host}`)
 			return
 		}
-		// Handle command and state messages
 		if (oscMsg.address.startsWith('/ggo/state/')) {
 			const variableName = this.parsePathToVariable(oscMsg)
-			// Check if constructed variable name exists before handling the message
 			if (variableName in this.companionVariables) {
-				// Separate values that may create a message flood to treat them differently
 				let isFlooding = oscMsg.address.includes('level') || oscMsg.address.includes('gain')
 				this.updatesCollector.collect(variableName, oscMsg.args[0].value, isFlooding)
 			} else {
@@ -85,70 +72,51 @@ class OscModule extends EventEmitter {
 		}
 	}
 
-	// Construct variable name from OSC message path
 	parsePathToVariable(oscMsg) {
-		// Split the path into segments
 		let segments = oscMsg.address.split('/')
-		// Ignore the first segment if it's empty (paths starting with '/')
 		if (segments[0] === '') {
 			segments = segments.slice(2)
 		}
-		// Remove the "channel" string from the segments array
 		segments = segments.filter((segment) => segment !== 'channel')
-		// Convert the segments into a variable name
 		let variableName = segments.join('_')
 		if (oscMsg.address.includes('/channel/')) {
-			// Append "_ch+ID" to the variable name
 			variableName += '_ch' + oscMsg.args[1].value
 		}
 		return variableName
 	}
 
-	// Update variable values for Companion and internal uses
 	updateVariableValues(updates) {
 		let updatedVariables = {}
 		let count = 0
 
-		// Iterate over the updates
 		for (let [variableName, value] of Object.entries(updates)) {
-			// Check if variable exists and if its value has changed
 			if (
 				this.companionVariables.hasOwnProperty(variableName) &&
 				this.companionVariables[variableName].value !== value
 			) {
-				// Store updates for variables whose values have changed
 				updatedVariables[variableName] = value
-				// Update local variable's value
 				this.companionVariables[variableName] = {
 					name: this.companionVariables[variableName].name,
 					value: value,
 				}
-				// Emit an event for the updated variable
 				this.emit('variableUpdated', variableName, value)
-				// Increment the counter
 				count++
 			}
 		}
-		// Apply the updates to Companion variables
 		if (Object.keys(updatedVariables).length > 0) {
 			this.module.setVariableValues(updatedVariables)
 			this.module.checkFeedbacks()
 		}
-		// Log the number of variables updated
 		if (count > 0) {
 			this.module.log('debug', `OSC Manager: Updated values of ${count} variables`)
 		}
 	}
 
-	// Helper function to sent OSC messages
 	sendCommand(cmd, values) {
-		// Normalize `values` to always be an array, this is needed to accept multiple values
 		if (!Array.isArray(values)) {
 			values = [values]
 		}
-		// Map values in array and prepare the arguments
 		const args = values.map((value) => ({ type: 'i', value }))
-		// Send command to Green-GO device
 		this.oscPort.send({
 			address: '/ggo/cmd/' + cmd,
 			args: args,
@@ -159,7 +127,6 @@ class OscModule extends EventEmitter {
 		)
 	}
 
-	// Request state update from the Green-GO device. Runs as a timer to ensure we receive an update when the device comes online
 	requestStateUpdate(isTimerCall = false) {
 		if (this.oscPort) {
 			const logMessage = isTimerCall
@@ -177,17 +144,12 @@ class OscModule extends EventEmitter {
 		}
 	}
 
-	// Helper function to reset the heartbeat
 	handleHeartbeat() {
-		// Set the heartbeat variable to 0
 		this.updateVariableValues({ state_heartbeat: 0 })
-		// Log a warning or error
 		this.module.log('warn', `OSC Manager: Lost heartbeat of ${this.config.host}`)
-		// Start requesting state updates
 		this.requestStateUpdate()
 	}
 
-	// Helper function to close existing connections
 	closeOSCListeners() {
 		if (this.oscPort) {
 			this.oscPort.close()
@@ -201,7 +163,6 @@ class OscModule extends EventEmitter {
 	}
 
 	onError(error) {
-		// Log errors
 		this.module.log('error', `OSC Manager: ${error.message}`)
 	}
 

@@ -169,9 +169,7 @@ class GreenGoModule extends InstanceBase {
 					{ id: 'BPX', label: 'BPX(SP)' },
 					{ id: 'MCX', label: 'MCX(D)' },
 					{ id: 'WPX', label: 'WPX' },
-					// { id: 'BridgeX', label: 'BridgeX' },
 					{ id: 'DNTI', label: 'DNTI' },
-					// { id: 'INTX', label: 'INTX' },
 					{ id: 'Q4WR', label: 'Q4WR' },
 					{ id: 'RDX', label: 'RDX' },
 					{ id: 'SI2WR', label: 'Si2WR' },
@@ -186,11 +184,11 @@ class GreenGoModule extends InstanceBase {
 				label: 'Channel Count',
 				width: 4,
 				required: true,
-				default: 6,
+				default: 6, // Default value
 				min: 1,
-				max: 6,
+				max: 12, // Updated maximum value
 				regex: Regex.number,
-				tooltip: 'Define the amount of channels to control via this module (1 - 6)',
+				tooltip: 'Define the amount of channels to control via this module (1 - 12)',
 			},
 			{
 				type: 'static-text',
@@ -202,6 +200,7 @@ class GreenGoModule extends InstanceBase {
 			},
 		]
 	}
+	
 
 	updateVariableDefinitions() {
 		UpdateVariableDefinitions(this)
